@@ -1,0 +1,21 @@
+id_estudiante,semestre,fecha,hora_entrada,hora_salida,equipo_utilizado,descripcion_equipo
+1.085.500.001,5,15/08/2025,08:15,10:30:00,PC-LAB1-05,Workstation MERN - MongoDB/React
+ 1085500002,5,2025-08-15,9:00 AM,11:45,pc-lab1-12,Workstation General - Ofimática
+1085.500.004,5,08-16-2025,14:00:00,6:30 PM,PC-LAB2-01,Entorno Python - Estructuras de Datos
+1085500006 ,5,16/08/2025,14:10,17:00,PC-LAB2-04,workstation mern - node.js/express
+1.085.500.001,5,2025-08-20,08:00:00,12:00 p.m.,PC-LAB1-05,Workstation MERN - MongoDB/React
+1085 500 009,5,20-08-2025,10:30 AM,13:00,PC-LAB3-15,Maquina Virtual - Arquitectura de Redes
+1085500011,5,2025-08-22,16:00:00,,PC-LAB1-08,Laboratorio Célula de Programación
+1085500013,5,08-22-2025,4:15 PM,20:00:00,PC-LAB1-09, Workstation Linux - Backend TypeScript 
+1.085.500.004,5,23/08/2025,14:00:00,17:00:00,PC-LAB2-01,ENTORNO PYTHON - ESTRUCTURAS DE DATOS
+1085500003,5,2025-08-25,09:00:00,10:00 a.m.,PC-LAB2-10,Workstation General - Navegación Web
+1085500005,5,25/08/2025,11:00 AM,13:30,PC-LAB2-11,Servidor GPU - Modelos Machine Learning
+1085.500.015,5,2025-08-26,08:30:00,11:00,PC-LAB3-02,Sala Audiovisual - Video Beam
+1085 500 008,5,26/08/2025,14:00,3:30 PM,PC-LAB1-20,Workstation General - Ofimática
+1085500013,5,08-27-2025,15:00:00,19:00:00,PC-LAB1-09,Workstation Linux - Backend TypeScript
+1085500010,5,2025-08-27,9:30 AM,11:30:00,PC-LAB2-05,Workstation General - Ofimática
+1.085.500.012,5,28/08/2025,15:00,16:00,PC-LAB3-09,Sala Audiovisual - Video Beam
+1085500001 ,5,2025-08-29,08:00:00,11:00 a.m.,PC-LAB1-05,Workstation MERN - MongoDB/React
+1085500002,5,29/08/2025,09:15,12:00:00,PC-LAB1-12,Workstation General - Ofimática
+1085.500.004,5,08-30-2025,2:00 PM,18:00,PC-LAB2-01,Entorno Python - Estructuras de Datos
+1085 500 011,5,30/08/2025,14:30:00,5:45 PM,PC-LAB1-08,Laboratorio Célula de Programación
