@@ -1,33 +1,94 @@
+import { useState, useMemo } from "react";
 import type { CourseFilterOption } from "../../types/dashboard";
 
-interface SearchableInputProps {
+interface MultiSelectProps {
   label: string;
-  listId: string;
-  value: string | null;
+  selectedValues: string[];
   options: string[];
-  onChange: (value: string | null) => void;
-  emptyLabel?: string;
+  onChange: (values: string[]) => void;
   placeholder?: string;
 }
 
+const MultiSelect = ({
+  label,
+  selectedValues,
+  options,
+  onChange,
+  placeholder = "Buscar...",
+}: MultiSelectProps) => {
+  const [search, setSearch] = useState("");
+
+  const filteredOptions = useMemo(() => {
+    if (!search.trim()) return options;
+    const lower = search.toLowerCase();
+    return options.filter((opt) => opt.toLowerCase().includes(lower));
+  }, [options, search]);
+
+  const handleToggle = (option: string) => {
+    if (selectedValues.includes(option)) {
+      onChange(selectedValues.filter((v) => v !== option));
+    } else {
+      onChange([...selectedValues, option]);
+    }
+  };
+
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-medium text-text-main">{label}</label>
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={placeholder}
+        className="mb-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-text-main transition focus:border-primary focus:outline-none"
+      />
+      <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-slate-300 bg-white p-2">
+        {filteredOptions.length === 0 ? (
+          <p className="text-xs text-text-muted">No hay opciones</p>
+        ) : (
+          filteredOptions.map((option) => (
+            <label
+              key={option}
+              className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-slate-50"
+            >
+              <input
+                type="checkbox"
+                checked={selectedValues.includes(option)}
+                onChange={() => handleToggle(option)}
+                className="rounded border-slate-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-text-main">{option}</span>
+            </label>
+          ))
+        )}
+      </div>
+      {selectedValues.length > 0 && (
+        <p className="mt-1 text-xs text-text-muted">
+          {selectedValues.length} seleccionado{selectedValues.length > 1 ? "s" : ""}
+        </p>
+      )}
+    </div>
+  );
+};
+
 interface FilterProps {
-  selectedSemester: string | null;
-  onSemesterChange: (semester: string | null) => void;
+  selectedSemester: string[];
+  onSemesterChange: (semester: string[]) => void;
   semesters: number[];
-  selectedSubject: string | null;
-  onSubjectChange: (subject: string | null) => void;
+  selectedSubject: string[];
+  onSubjectChange: (subject: string[]) => void;
   subjects: string[];
-  selectedYear: string | null;
-  onYearChange: (year: string | null) => void;
+  selectedYear: string[];
+  onYearChange: (year: string[]) => void;
   years: number[];
-  selectedCourse: string | null;
-  onCourseChange: (course: string | null) => void;
+  selectedCourse: number[];
+  onCourseChange: (course: number[]) => void;
   courses: CourseFilterOption[];
-  selectedTeacher: string | null;
-  onTeacherChange: (teacher: string | null) => void;
+  selectedTeacher: string[];
+  onTeacherChange: (teacher: string[]) => void;
   teachers: string[];
-  selectedActivityLevel: string | null;
-  onActivityLevelChange: (value: string | null) => void;
+  selectedActivityLevel: string[];
+  onActivityLevelChange: (value: string[]) => void;
   activityLevels: string[];
   selectedGradeMin: string | null;
   onGradeMinChange: (value: string | null) => void;
@@ -35,34 +96,6 @@ interface FilterProps {
   onGradeMaxChange: (value: string | null) => void;
   onClearFilters: () => void;
 }
-
-const SearchableInput = ({
-  label,
-  listId,
-  value,
-  options,
-  onChange,
-  emptyLabel = "Todos",
-  placeholder = "Escribe para buscar...",
-}: SearchableInputProps) => (
-  <div>
-    <label className="mb-2 block text-sm font-medium text-text-main">{label}</label>
-    <input
-      list={listId}
-      value={value ?? ""}
-      onChange={(event) => onChange(event.target.value || null)}
-      placeholder={placeholder}
-      autoComplete="off"
-      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-text-main transition focus:border-primary focus:outline-none"
-    />
-    <datalist id={listId}>
-      <option value="">{emptyLabel}</option>
-      {options.map((option) => (
-        <option key={option} value={option} />
-      ))}
-    </datalist>
-  </div>
-);
 
 export default function Filter({
   selectedSemester,
@@ -93,6 +126,14 @@ export default function Filter({
   const yearOptions = years.map((year) => String(year));
   const uniqueYear = years.length === 1 ? years[0] : null;
 
+  const [courseSearch, setCourseSearch] = useState("");
+
+  const filteredCourses = useMemo(() => {
+    if (!courseSearch.trim()) return courses;
+    const lower = courseSearch.toLowerCase();
+    return courses.filter((c) => c.label.toLowerCase().includes(lower));
+  }, [courses, courseSearch]);
+
   return (
     <div className="space-y-4">
       {uniqueYear ? (
@@ -106,46 +147,63 @@ export default function Filter({
           <p className="mt-1 text-xs text-text-muted">Solo hay datos para este año.</p>
         </div>
       ) : (
-        <SearchableInput
+        <MultiSelect
           label="Año"
-          listId="year-options"
-          value={selectedYear}
+          selectedValues={selectedYear}
           options={yearOptions}
           onChange={onYearChange}
         />
       )}
 
-      <SearchableInput
+      <MultiSelect
         label="Semestre Estudiante"
-        listId="semester-options"
-        value={selectedSemester}
+        selectedValues={selectedSemester}
         options={semesterOptions}
         onChange={onSemesterChange}
-        placeholder="Ejemplo: 5"
+        placeholder="Buscar semestre..."
       />
 
       <div>
         <label className="mb-2 block text-sm font-medium text-text-main">Curso</label>
         <input
-          list="course-options"
-          value={selectedCourse ?? ""}
-          onChange={(event) => onCourseChange(event.target.value || null)}
-          placeholder="Escribe para buscar curso..."
-          autoComplete="off"
-          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-text-main transition focus:border-primary focus:outline-none"
+          type="text"
+          value={courseSearch}
+          onChange={(e) => setCourseSearch(e.target.value)}
+          placeholder="Buscar curso..."
+          className="mb-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-text-main transition focus:border-primary focus:outline-none"
         />
-        <datalist id="course-options">
-          <option value="">Todos</option>
-          {courses.map((course) => (
-            <option key={course.id} value={course.label} />
+        <div className="max-h-40 space-y-1 overflow-y-auto rounded border border-slate-300 bg-white p-2">
+          {filteredCourses.map((course) => (
+            <label
+              key={course.id}
+              className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-slate-50"
+            >
+              <input
+                type="checkbox"
+                checked={selectedCourse.includes(course.id)}
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    onCourseChange([...selectedCourse, course.id]);
+                  } else {
+                    onCourseChange(selectedCourse.filter((c) => c !== course.id));
+                  }
+                }}
+                className="rounded border-slate-300 text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-text-main">{course.label}</span>
+            </label>
           ))}
-        </datalist>
+        </div>
+        {selectedCourse.length > 0 && (
+          <p className="mt-1 text-xs text-text-muted">
+            {selectedCourse.length} seleccionado{selectedCourse.length > 1 ? "s" : ""}
+          </p>
+        )}
       </div>
 
-      <SearchableInput
+      <MultiSelect
         label="Nivel Actividad Biblioteca"
-        listId="activity-level-options"
-        value={selectedActivityLevel}
+        selectedValues={selectedActivityLevel}
         options={activityLevels}
         onChange={onActivityLevelChange}
       />
@@ -177,18 +235,16 @@ export default function Filter({
         <p className="mt-1 text-xs text-text-muted">Ejemplo: 0.0 a 0.5, o 4.5 a 5.0</p>
       </div>
 
-      <SearchableInput
+      <MultiSelect
         label="Docente"
-        listId="teacher-options"
-        value={selectedTeacher}
+        selectedValues={selectedTeacher}
         options={teachers}
         onChange={onTeacherChange}
       />
 
-      <SearchableInput
+      <MultiSelect
         label="Asignatura"
-        listId="subject-options"
-        value={selectedSubject}
+        selectedValues={selectedSubject}
         options={subjects}
         onChange={onSubjectChange}
       />

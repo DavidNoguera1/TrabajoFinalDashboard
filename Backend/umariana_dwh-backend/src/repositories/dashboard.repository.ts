@@ -2,13 +2,13 @@ import { neonPool } from '../config/database';
 
 export interface DashboardFilters {
   year?: number;
-  semester?: number;
-  courseId?: number;
-  teacher?: string;
-  subject?: string;
+  semesters?: number[];
+  courseIds?: number[];
+  teachers?: string[];
+  subjects?: string[];
   gradeMin?: number;
   gradeMax?: number;
-  activityLevel?: string;
+  activityLevels?: string[];
 }
 
 type QueryParam = number | string;
@@ -44,30 +44,38 @@ const buildAcademicFilters = (
     paramIndex += 1;
   }
 
-  if (typeof filters.semester === 'number') {
-    conditions.push(`${studentAlias}.semestre_actual = $${paramIndex}`);
-    params.push(filters.semester);
-    paramIndex += 1;
+  if (filters.semesters && filters.semesters.length > 0) {
+    const placeholders = filters.semesters.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${studentAlias}.semestre_actual IN (${placeholders})`);
+    params.push(...filters.semesters);
+    paramIndex += filters.semesters.length;
   }
 
-  if (typeof filters.courseId === 'number') {
-    conditions.push(`${tableAlias}.id_curso = $${paramIndex}`);
-    params.push(filters.courseId);
-    paramIndex += 1;
+  if (filters.courseIds && filters.courseIds.length > 0) {
+    const placeholders = filters.courseIds.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${tableAlias}.id_curso IN (${placeholders})`);
+    params.push(...filters.courseIds);
+    paramIndex += filters.courseIds.length;
   }
 
-  if (filters.teacher) {
-    conditions.push(`${tableAlias}.docente_asignado ILIKE $${paramIndex}`);
-    params.push(`%${filters.teacher}%`);
-    paramIndex += 1;
+  if (filters.teachers && filters.teachers.length > 0) {
+    const teacherConditions = filters.teachers.map((teacher, i) => {
+      conditions.push(`${tableAlias}.docente_asignado ILIKE $${paramIndex + i}`);
+      return `$${paramIndex + i}`;
+    });
+    conditions.push(`(${teacherConditions.map(t => `${tableAlias}.docente_asignado ILIKE ${t}`).join(' OR ')})`);
+    params.push(...filters.teachers.map(t => `%${t}%`));
+    paramIndex += filters.teachers.length;
   }
 
-  if (filters.subject) {
-    conditions.push(
-      `(COALESCE(${subjectAlias}.nombre_asignatura, ${tableAlias}.codigo_asignatura) ILIKE $${paramIndex} OR ${tableAlias}.codigo_asignatura ILIKE $${paramIndex})`
-    );
-    params.push(`%${filters.subject}%`);
-    paramIndex += 1;
+  if (filters.subjects && filters.subjects.length > 0) {
+    const subjectConditions = filters.subjects.map((subject, i) => {
+      const param = `$${paramIndex + i}`;
+      return `(COALESCE(${subjectAlias}.nombre_asignatura, ${tableAlias}.codigo_asignatura) ILIKE ${param} OR ${tableAlias}.codigo_asignatura ILIKE ${param})`;
+    });
+    conditions.push(`(${subjectConditions.join(' OR ')})`);
+    params.push(...filters.subjects.map(s => `%${s}%`));
+    paramIndex += filters.subjects.length;
   }
 
   if (typeof filters.gradeMin === 'number') {
@@ -82,10 +90,11 @@ const buildAcademicFilters = (
     paramIndex += 1;
   }
 
-  if (filters.activityLevel) {
-    conditions.push(`${studentAlias}.nivel_actividad_biblioteca = $${paramIndex}`);
-    params.push(filters.activityLevel);
-    paramIndex += 1;
+  if (filters.activityLevels && filters.activityLevels.length > 0) {
+    const placeholders = filters.activityLevels.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${studentAlias}.nivel_actividad_biblioteca IN (${placeholders})`);
+    params.push(...filters.activityLevels);
+    paramIndex += filters.activityLevels.length;
   }
 
   return { conditions, params, nextParamIndex: paramIndex };
@@ -110,13 +119,13 @@ const buildLibraryDateFilters = (
 };
 
 const shouldApplyAcademicCohort = (filters: DashboardFilters): boolean =>
-  typeof filters.semester === 'number' ||
-  typeof filters.courseId === 'number' ||
-  Boolean(filters.teacher) ||
-  Boolean(filters.subject) ||
+  Boolean(filters.semesters?.length) ||
+  Boolean(filters.courseIds?.length) ||
+  Boolean(filters.teachers?.length) ||
+  Boolean(filters.subjects?.length) ||
   typeof filters.gradeMin === 'number' ||
   typeof filters.gradeMax === 'number' ||
-  Boolean(filters.activityLevel);
+  Boolean(filters.activityLevels?.length);
 
 export const getFilters = async (): Promise<Record<string, unknown>> => {
   const yearsQuery = `

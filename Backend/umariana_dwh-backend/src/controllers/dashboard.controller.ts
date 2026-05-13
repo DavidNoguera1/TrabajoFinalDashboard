@@ -35,20 +35,43 @@ const parseStringParam = (value: unknown): string | undefined => {
   return normalized ? normalized : undefined;
 };
 
+const parseNumberArrayParam = (value: unknown): number[] | undefined => {
+  if (typeof value === 'string') {
+    const parsed = parseNumberParam(value);
+    return parsed ? [parsed] : undefined;
+  }
+  if (Array.isArray(value)) {
+    const numbers = value
+      .map(v => parseNumberParam(v))
+      .filter((v): v is number => typeof v === 'number');
+    return numbers.length > 0 ? numbers : undefined;
+  }
+  return undefined;
+};
+
+const parseStringArrayParam = (value: unknown): string[] | undefined => {
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim()];
+  }
+  if (Array.isArray(value)) {
+    const strings = value
+      .map(v => parseStringParam(v))
+      .filter((v): v is string => typeof v === 'string');
+    return strings.length > 0 ? strings : undefined;
+  }
+  return undefined;
+};
+
 const getDashboardFilters = (req: Request): DashboardFilters => {
   const year = parseNumberParam(req.query.year);
-  const semesterRaw = parseNumberParam(req.query.semester);
-  const courseId = parseNumberParam(req.query.courseId);
-  const teacher = parseStringParam(req.query.teacher);
-  const subject = parseStringParam(req.query.subject);
-  const activityLevel = parseStringParam(req.query.activityLevel);
+  const semesters = parseNumberArrayParam(req.query.semesters);
+  const courseIds = parseNumberArrayParam(req.query.courseIds);
+  const teachers = parseStringArrayParam(req.query.teachers);
+  const subjects = parseStringArrayParam(req.query.subjects);
+  const activityLevels = parseStringArrayParam(req.query.activityLevels);
   const gradeMinRaw = parseNumberParam(req.query.gradeMin);
   const gradeMaxRaw = parseNumberParam(req.query.gradeMax);
 
-  const semester =
-    typeof semesterRaw === 'number' && semesterRaw >= 1 && semesterRaw <= 20
-      ? Math.trunc(semesterRaw)
-      : undefined;
   const gradeMin =
     typeof gradeMinRaw === 'number' && gradeMinRaw >= 0 && gradeMinRaw <= 5
       ? gradeMinRaw
@@ -60,11 +83,11 @@ const getDashboardFilters = (req: Request): DashboardFilters => {
 
   return {
     ...(typeof year === 'number' ? { year } : {}),
-    ...(typeof semester === 'number' ? { semester } : {}),
-    ...(typeof courseId === 'number' ? { courseId } : {}),
-    ...(teacher ? { teacher } : {}),
-    ...(subject ? { subject } : {}),
-    ...(activityLevel ? { activityLevel } : {}),
+    ...(semesters ? { semesters: semesters.map(s => Math.trunc(s)).filter(s => s >= 1 && s <= 20) } : {}),
+    ...(courseIds ? { courseIds } : {}),
+    ...(teachers ? { teachers } : {}),
+    ...(subjects ? { subjects } : {}),
+    ...(activityLevels ? { activityLevels } : {}),
     ...(typeof gradeMin === 'number' ? { gradeMin } : {}),
     ...(typeof gradeMax === 'number' ? { gradeMax } : {})
   };

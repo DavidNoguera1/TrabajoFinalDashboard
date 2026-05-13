@@ -1,12 +1,12 @@
 export interface DashboardQueryFilters {
   year?: number;
-  semester?: number;
-  courseId?: number;
-  teacher?: string;
-  subject?: string;
+  semesters?: number[];
+  courseIds?: number[];
+  teachers?: string[];
+  subjects?: string[];
   gradeMin?: number;
   gradeMax?: number;
-  activityLevel?: string;
+  activityLevels?: string[];
 }
 
 export interface CourseFilterOption {

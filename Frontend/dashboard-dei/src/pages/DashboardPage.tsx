@@ -33,12 +33,12 @@ function DashboardPage() {
     loading,
   } = useDashboardStore();
 
-  const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
-  const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
-  const [selectedActivityLevel, setSelectedActivityLevel] = useState<string | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<string[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string[]>([]);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([]);
+  const [selectedTeacher, setSelectedTeacher] = useState<string[]>([]);
+  const [selectedActivityLevel, setSelectedActivityLevel] = useState<string[]>([]);
   const [selectedGradeMin, setSelectedGradeMin] = useState<string | null>(null);
   const [selectedGradeMax, setSelectedGradeMax] = useState<string | null>(null);
 
@@ -48,29 +48,24 @@ function DashboardPage() {
 
   const appliedFilters = useMemo<DashboardQueryFilters>(() => {
     const defaultYear =
-      filters?.years && filters.years.length === 1 ? String(filters.years[0]) : null;
-    const year = toNumberOrUndefined(selectedYear ?? defaultYear);
-    const semesterNumber = toNumberOrUndefined(selectedSemester);
-    const normalizedCourse = (selectedCourse || "").trim().toLowerCase();
-    const exactCourseMatch = (filters?.courses || []).find(
-      (course) => course.label.trim().toLowerCase() === normalizedCourse
-    );
-    const partialMatches = (filters?.courses || []).filter((course) =>
-      course.label.trim().toLowerCase().includes(normalizedCourse)
-    );
-    const matchedCourse =
-      exactCourseMatch || (normalizedCourse && partialMatches.length === 1 ? partialMatches[0] : undefined);
-    const courseId = matchedCourse?.id ?? toNumberOrUndefined(selectedCourse);
+      filters?.years && filters.years.length === 1 ? [String(filters.years[0])] : [];
+    const years = selectedYear.length > 0 ? selectedYear : defaultYear;
+    const year = years.length === 1 ? toNumberOrUndefined(years[0]) : undefined;
+
+    const semesters = selectedSemester.length > 0 
+      ? selectedSemester.map(s => toNumberOrUndefined(s)).filter((s): s is number => typeof s === "number")
+      : [];
+
     const gradeMin = toNumberOrUndefined(selectedGradeMin);
     const gradeMax = toNumberOrUndefined(selectedGradeMax);
 
     return {
       ...(typeof year === "number" ? { year } : {}),
-      ...(typeof semesterNumber === "number" ? { semester: Math.trunc(semesterNumber) } : {}),
-      ...(typeof courseId === "number" ? { courseId } : {}),
-      ...(selectedTeacher ? { teacher: selectedTeacher } : {}),
-      ...(selectedSubject ? { subject: selectedSubject } : {}),
-      ...(selectedActivityLevel ? { activityLevel: selectedActivityLevel } : {}),
+      ...(semesters.length > 0 ? { semesters: semesters.map(s => Math.trunc(s)) } : {}),
+      ...(selectedCourseIds.length > 0 ? { courseIds: selectedCourseIds } : {}),
+      ...(selectedTeacher.length > 0 ? { teachers: selectedTeacher } : {}),
+      ...(selectedSubject.length > 0 ? { subjects: selectedSubject } : {}),
+      ...(selectedActivityLevel.length > 0 ? { activityLevels: selectedActivityLevel } : {}),
       ...(typeof gradeMin === "number" ? { gradeMin } : {}),
       ...(typeof gradeMax === "number" ? { gradeMax } : {}),
     };
@@ -78,7 +73,7 @@ function DashboardPage() {
     filters,
     selectedYear,
     selectedSemester,
-    selectedCourse,
+    selectedCourseIds,
     selectedTeacher,
     selectedSubject,
     selectedActivityLevel,
@@ -87,16 +82,17 @@ function DashboardPage() {
   ]);
 
   useEffect(() => {
+    console.log("Applied filters:", JSON.stringify(appliedFilters));
     fetchDashboardData(appliedFilters);
   }, [fetchDashboardData, appliedFilters]);
 
   const clearFilters = () => {
-    setSelectedSemester(null);
-    setSelectedSubject(null);
-    setSelectedYear(null);
-    setSelectedCourse(null);
-    setSelectedTeacher(null);
-    setSelectedActivityLevel(null);
+    setSelectedSemester([]);
+    setSelectedSubject([]);
+    setSelectedYear([]);
+    setSelectedCourseIds([]);
+    setSelectedTeacher([]);
+    setSelectedActivityLevel([]);
     setSelectedGradeMin(null);
     setSelectedGradeMax(null);
   };
@@ -141,8 +137,8 @@ function DashboardPage() {
           selectedYear={selectedYear}
           onYearChange={setSelectedYear}
           years={years}
-          selectedCourse={selectedCourse}
-          onCourseChange={setSelectedCourse}
+          selectedCourse={selectedCourseIds}
+          onCourseChange={setSelectedCourseIds}
           courses={courses}
           selectedTeacher={selectedTeacher}
           onTeacherChange={setSelectedTeacher}

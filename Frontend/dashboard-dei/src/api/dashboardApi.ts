@@ -15,19 +15,30 @@ import type {
 
 const api = axios.create({
   baseURL: "http://localhost:3003/api/dashboard",
+  paramsSerializer: (params) => {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value.forEach((v) => searchParams.append(key, String(v)));
+      } else {
+        searchParams.append(key, String(value));
+      }
+    });
+    return searchParams.toString();
+  },
 });
 
-const buildQueryParams = (filters?: DashboardQueryFilters): Record<string, string | number> => {
+const buildQueryParams = (filters?: DashboardQueryFilters): Record<string, string | number | string[]> => {
   if (!filters) return {};
 
-  const params: Record<string, string | number> = {};
+  const params: Record<string, string | number | string[]> = {};
 
   if (typeof filters.year === "number") params.year = filters.year;
-  if (typeof filters.semester === "number") params.semester = filters.semester;
-  if (typeof filters.courseId === "number") params.courseId = filters.courseId;
-  if (filters.teacher) params.teacher = filters.teacher;
-  if (filters.subject) params.subject = filters.subject;
-  if (filters.activityLevel) params.activityLevel = filters.activityLevel;
+  if (filters.semesters && filters.semesters.length > 0) params.semesters = filters.semesters;
+  if (filters.courseIds && filters.courseIds.length > 0) params.courseIds = filters.courseIds;
+  if (filters.teachers && filters.teachers.length > 0) params.teachers = filters.teachers;
+  if (filters.subjects && filters.subjects.length > 0) params.subjects = filters.subjects;
+  if (filters.activityLevels && filters.activityLevels.length > 0) params.activityLevels = filters.activityLevels;
   if (typeof filters.gradeMin === "number") params.gradeMin = filters.gradeMin;
   if (typeof filters.gradeMax === "number") params.gradeMax = filters.gradeMax;
 

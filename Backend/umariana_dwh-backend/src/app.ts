@@ -1,6 +1,7 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import qs from 'qs';
 import dashboardRoutes from './routes/dashboard.routes';
 import pipelineRoutes from './routes/pipeline.routes';
 import { testNeonConnection } from './config/database';
@@ -13,6 +14,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true, parameterLimit: 1000 }));
 
 app.get('/', (_req, res) => {
   res.status(200).json({ success: true, message: 'UMariana DWH Backend activo' });
