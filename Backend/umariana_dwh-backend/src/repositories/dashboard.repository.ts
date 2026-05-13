@@ -290,15 +290,25 @@ export const getAcademicGradeDistributionByStudent = async (
       FROM filtered_academic
       GROUP BY id_estudiante
     )
-    SELECT '0.0 - 1.9' AS rango, COUNT(*) FILTER (WHERE avg_grade < 2)::int AS total_estudiantes FROM student_avg
+    SELECT '0.0 - 0.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 0 AND avg_grade < 0.5)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '2.0 - 2.9' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 2 AND avg_grade < 3)::int AS total_estudiantes FROM student_avg
+    SELECT '0.5 - 1.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 0.5 AND avg_grade < 1.0)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '3.0 - 3.9' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 3 AND avg_grade < 4)::int AS total_estudiantes FROM student_avg
+    SELECT '1.0 - 1.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 1.0 AND avg_grade < 1.5)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '4.0 - 4.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4 AND avg_grade < 4.6)::int AS total_estudiantes FROM student_avg
+    SELECT '1.5 - 2.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 1.5 AND avg_grade < 2.0)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '4.6 - 5.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4.6 AND avg_grade <= 5)::int AS total_estudiantes FROM student_avg
+    SELECT '2.0 - 2.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 2.0 AND avg_grade < 2.5)::int AS total_estudiantes FROM student_avg
+    UNION ALL
+    SELECT '2.5 - 3.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 2.5 AND avg_grade < 3.0)::int AS total_estudiantes FROM student_avg
+    UNION ALL
+    SELECT '3.0 - 3.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 3.0 AND avg_grade < 3.5)::int AS total_estudiantes FROM student_avg
+    UNION ALL
+    SELECT '3.5 - 4.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 3.5 AND avg_grade < 4.0)::int AS total_estudiantes FROM student_avg
+    UNION ALL
+    SELECT '4.0 - 4.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4.0 AND avg_grade < 4.5)::int AS total_estudiantes FROM student_avg
+    UNION ALL
+    SELECT '4.5 - 5.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4.5 AND avg_grade <= 5.0)::int AS total_estudiantes FROM student_avg
   `;
 
   const result = await neonPool.query(query, academicFilters.params);

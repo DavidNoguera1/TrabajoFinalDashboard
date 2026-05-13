@@ -90,10 +90,8 @@ interface FilterProps {
   selectedActivityLevel: string[];
   onActivityLevelChange: (value: string[]) => void;
   activityLevels: string[];
-  selectedGradeMin: string | null;
-  onGradeMinChange: (value: string | null) => void;
-  selectedGradeMax: string | null;
-  onGradeMaxChange: (value: string | null) => void;
+  selectedGradeRanges: string[];
+  onGradeRangesChange: (value: string[]) => void;
   onClearFilters: () => void;
 }
 
@@ -116,12 +114,22 @@ export default function Filter({
   selectedActivityLevel,
   onActivityLevelChange,
   activityLevels,
-  selectedGradeMin,
-  onGradeMinChange,
-  selectedGradeMax,
-  onGradeMaxChange,
+  selectedGradeRanges,
+  onGradeRangesChange,
   onClearFilters,
 }: FilterProps) {
+  const gradeRanges = [
+    "0.0 - 0.5",
+    "0.5 - 1.0",
+    "1.0 - 1.5",
+    "1.5 - 2.0",
+    "2.0 - 2.5",
+    "2.5 - 3.0",
+    "3.0 - 3.5",
+    "3.5 - 4.0",
+    "4.0 - 4.5",
+    "4.5 - 5.0",
+  ];
   const semesterOptions = semesters.map((semester) => String(semester));
   const yearOptions = years.map((year) => String(year));
   const uniqueYear = years.length === 1 ? years[0] : null;
@@ -208,32 +216,12 @@ export default function Filter({
         onChange={onActivityLevelChange}
       />
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-text-main">Rango de Calificación</label>
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            type="number"
-            min={0}
-            max={5}
-            step={0.1}
-            value={selectedGradeMin ?? ""}
-            onChange={(event) => onGradeMinChange(event.target.value || null)}
-            placeholder="Mín"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-text-main transition focus:border-primary focus:outline-none"
-          />
-          <input
-            type="number"
-            min={0}
-            max={5}
-            step={0.1}
-            value={selectedGradeMax ?? ""}
-            onChange={(event) => onGradeMaxChange(event.target.value || null)}
-            placeholder="Máx"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-text-main transition focus:border-primary focus:outline-none"
-          />
-        </div>
-        <p className="mt-1 text-xs text-text-muted">Ejemplo: 0.0 a 0.5, o 4.5 a 5.0</p>
-      </div>
+      <MultiSelect
+        label="Rango de Calificación"
+        selectedValues={selectedGradeRanges}
+        options={gradeRanges}
+        onChange={onGradeRangesChange}
+      />
 
       <MultiSelect
         label="Docente"

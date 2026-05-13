@@ -39,8 +39,7 @@ function DashboardPage() {
   const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<string[]>([]);
   const [selectedActivityLevel, setSelectedActivityLevel] = useState<string[]>([]);
-  const [selectedGradeMin, setSelectedGradeMin] = useState<string | null>(null);
-  const [selectedGradeMax, setSelectedGradeMax] = useState<string | null>(null);
+  const [selectedGradeRanges, setSelectedGradeRanges] = useState<string[]>([]);
 
   useEffect(() => {
     fetchFilters();
@@ -56,8 +55,14 @@ function DashboardPage() {
       ? selectedSemester.map(s => toNumberOrUndefined(s)).filter((s): s is number => typeof s === "number")
       : [];
 
-    const gradeMin = toNumberOrUndefined(selectedGradeMin);
-    const gradeMax = toNumberOrUndefined(selectedGradeMax);
+    let gradeMin: number | undefined;
+    let gradeMax: number | undefined;
+    if (selectedGradeRanges.length > 0) {
+      const mins = selectedGradeRanges.map(r => parseFloat(r.split(" - ")[0]));
+      const maxs = selectedGradeRanges.map(r => parseFloat(r.split(" - ")[1]));
+      gradeMin = Math.min(...mins);
+      gradeMax = Math.max(...maxs);
+    }
 
     return {
       ...(typeof year === "number" ? { year } : {}),
@@ -77,8 +82,7 @@ function DashboardPage() {
     selectedTeacher,
     selectedSubject,
     selectedActivityLevel,
-    selectedGradeMin,
-    selectedGradeMax,
+    selectedGradeRanges,
   ]);
 
   useEffect(() => {
@@ -93,8 +97,7 @@ function DashboardPage() {
     setSelectedCourseIds([]);
     setSelectedTeacher([]);
     setSelectedActivityLevel([]);
-    setSelectedGradeMin(null);
-    setSelectedGradeMax(null);
+    setSelectedGradeRanges([]);
   };
 
   const years = filters?.years || [];
@@ -146,10 +149,8 @@ function DashboardPage() {
           selectedActivityLevel={selectedActivityLevel}
           onActivityLevelChange={setSelectedActivityLevel}
           activityLevels={activityLevels}
-          selectedGradeMin={selectedGradeMin}
-          onGradeMinChange={setSelectedGradeMin}
-          selectedGradeMax={selectedGradeMax}
-          onGradeMaxChange={setSelectedGradeMax}
+          selectedGradeRanges={selectedGradeRanges}
+          onGradeRangesChange={setSelectedGradeRanges}
           onClearFilters={clearFilters}
         />
       }
