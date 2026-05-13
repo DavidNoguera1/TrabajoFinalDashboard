@@ -1,14 +1,14 @@
 import { neonPool } from '../config/database';
 
 export interface DashboardFilters {
-  year?: number;
-  semesters?: number[];
-  courseIds?: number[];
-  teachers?: string[];
-  subjects?: string[];
+  year?: number | number[];
+  semester?: number | number[];
+  courseId?: number | number[];
+  teacher?: string | string[];
+  subject?: string | string[];
   gradeMin?: number;
   gradeMax?: number;
-  activityLevels?: string[];
+  activityLevel?: string | string[];
 }
 
 type QueryParam = number | string;
@@ -38,44 +38,64 @@ const buildAcademicFilters = (
   const params: QueryParam[] = [];
   let paramIndex = startParamIndex;
 
-  if (typeof filters.year === 'number') {
+  if (Array.isArray(filters.year) && filters.year.length > 0) {
+    const placeholders = filters.year.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`EXTRACT(YEAR FROM ${tableAlias}.id_fecha) = ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.year);
+    paramIndex += filters.year.length;
+  } else if (typeof filters.year === 'number') {
     conditions.push(`EXTRACT(YEAR FROM ${tableAlias}.id_fecha) = $${paramIndex}`);
     params.push(filters.year);
     paramIndex += 1;
   }
 
-  if (filters.semesters && filters.semesters.length > 0) {
-    const placeholders = filters.semesters.map((_, i) => `$${paramIndex + i}`).join(', ');
-    conditions.push(`${studentAlias}.semestre_actual IN (${placeholders})`);
-    params.push(...filters.semesters);
-    paramIndex += filters.semesters.length;
+  if (Array.isArray(filters.semester) && filters.semester.length > 0) {
+    const placeholders = filters.semester.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${studentAlias}.semestre_actual = ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.semester);
+    paramIndex += filters.semester.length;
+  } else if (typeof filters.semester === 'number') {
+    conditions.push(`${studentAlias}.semestre_actual = $${paramIndex}`);
+    params.push(filters.semester);
+    paramIndex += 1;
   }
 
-  if (filters.courseIds && filters.courseIds.length > 0) {
-    const placeholders = filters.courseIds.map((_, i) => `$${paramIndex + i}`).join(', ');
-    conditions.push(`${tableAlias}.id_curso IN (${placeholders})`);
-    params.push(...filters.courseIds);
-    paramIndex += filters.courseIds.length;
+  if (Array.isArray(filters.courseId) && filters.courseId.length > 0) {
+    const placeholders = filters.courseId.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${tableAlias}.id_curso = ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.courseId);
+    paramIndex += filters.courseId.length;
+  } else if (typeof filters.courseId === 'number') {
+    conditions.push(`${tableAlias}.id_curso = $${paramIndex}`);
+    params.push(filters.courseId);
+    paramIndex += 1;
   }
 
-  if (filters.teachers && filters.teachers.length > 0) {
-    const teacherConditions = filters.teachers.map((teacher, i) => {
-      conditions.push(`${tableAlias}.docente_asignado ILIKE $${paramIndex + i}`);
-      return `$${paramIndex + i}`;
-    });
-    conditions.push(`(${teacherConditions.map(t => `${tableAlias}.docente_asignado ILIKE ${t}`).join(' OR ')})`);
-    params.push(...filters.teachers.map(t => `%${t}%`));
-    paramIndex += filters.teachers.length;
+  if (Array.isArray(filters.teacher) && filters.teacher.length > 0) {
+    const placeholders = filters.teacher.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${tableAlias}.docente_asignado ILIKE ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.teacher.map((t) => `%${t}%`));
+    paramIndex += filters.teacher.length;
+  } else if (typeof filters.teacher === 'string' && filters.teacher.trim()) {
+    conditions.push(`${tableAlias}.docente_asignado ILIKE $${paramIndex}`);
+    params.push(`%${filters.teacher}%`);
+    paramIndex += 1;
   }
 
-  if (filters.subjects && filters.subjects.length > 0) {
-    const subjectConditions = filters.subjects.map((subject, i) => {
-      const param = `$${paramIndex + i}`;
-      return `(COALESCE(${subjectAlias}.nombre_asignatura, ${tableAlias}.codigo_asignatura) ILIKE ${param} OR ${tableAlias}.codigo_asignatura ILIKE ${param})`;
-    });
-    conditions.push(`(${subjectConditions.join(' OR ')})`);
-    params.push(...filters.subjects.map(s => `%${s}%`));
-    paramIndex += filters.subjects.length;
+  if (Array.isArray(filters.subject) && filters.subject.length > 0) {
+    const placeholders = filters.subject.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(
+      `(COALESCE(${subjectAlias}.nombre_asignatura, ${tableAlias}.codigo_asignatura) ILIKE ANY(ARRAY[${placeholders}]) OR ${tableAlias}.codigo_asignatura ILIKE ANY(ARRAY[${placeholders}]))`
+    );
+    const patterns = filters.subject.map((s) => `%${s}%`);
+    params.push(...patterns);
+    paramIndex += filters.subject.length;
+  } else if (typeof filters.subject === 'string' && filters.subject.trim()) {
+    conditions.push(
+      `(COALESCE(${subjectAlias}.nombre_asignatura, ${tableAlias}.codigo_asignatura) ILIKE $${paramIndex} OR ${tableAlias}.codigo_asignatura ILIKE $${paramIndex})`
+    );
+    params.push(`%${filters.subject}%`);
+    paramIndex += 1;
   }
 
   if (typeof filters.gradeMin === 'number') {
@@ -90,17 +110,21 @@ const buildAcademicFilters = (
     paramIndex += 1;
   }
 
-  if (filters.activityLevels && filters.activityLevels.length > 0) {
-    const placeholders = filters.activityLevels.map((_, i) => `$${paramIndex + i}`).join(', ');
-    conditions.push(`${studentAlias}.nivel_actividad_biblioteca IN (${placeholders})`);
-    params.push(...filters.activityLevels);
-    paramIndex += filters.activityLevels.length;
+  if (Array.isArray(filters.activityLevel) && filters.activityLevel.length > 0) {
+    const placeholders = filters.activityLevel.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${studentAlias}.nivel_actividad_biblioteca = ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.activityLevel);
+    paramIndex += filters.activityLevel.length;
+  } else if (typeof filters.activityLevel === 'string' && filters.activityLevel.trim()) {
+    conditions.push(`${studentAlias}.nivel_actividad_biblioteca = $${paramIndex}`);
+    params.push(filters.activityLevel);
+    paramIndex += 1;
   }
 
   return { conditions, params, nextParamIndex: paramIndex };
 };
 
-const buildLibraryDateFilters = (
+const buildLibraryFilters = (
   filters: DashboardFilters,
   startParamIndex = 1,
   tableAlias = 'fb'
@@ -109,9 +133,47 @@ const buildLibraryDateFilters = (
   const params: QueryParam[] = [];
   let paramIndex = startParamIndex;
 
-  if (typeof filters.year === 'number') {
+  if (Array.isArray(filters.year) && filters.year.length > 0) {
+    const placeholders = filters.year.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`EXTRACT(YEAR FROM ${tableAlias}.id_fecha) = ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.year);
+    paramIndex += filters.year.length;
+  } else if (typeof filters.year === 'number') {
     conditions.push(`EXTRACT(YEAR FROM ${tableAlias}.id_fecha) = $${paramIndex}`);
     params.push(filters.year);
+    paramIndex += 1;
+  }
+
+  if (Array.isArray(filters.courseId) && filters.courseId.length > 0) {
+    const placeholders = filters.courseId.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${tableAlias}.id_curso = ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.courseId);
+    paramIndex += filters.courseId.length;
+  } else if (typeof filters.courseId === 'number') {
+    conditions.push(`${tableAlias}.id_curso = $${paramIndex}`);
+    params.push(filters.courseId);
+    paramIndex += 1;
+  }
+
+  if (Array.isArray(filters.teacher) && filters.teacher.length > 0) {
+    const placeholders = filters.teacher.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${tableAlias}.docente_asignado ILIKE ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.teacher.map((t) => `%${t}%`));
+    paramIndex += filters.teacher.length;
+  } else if (typeof filters.teacher === 'string' && filters.teacher.trim()) {
+    conditions.push(`${tableAlias}.docente_asignado ILIKE $${paramIndex}`);
+    params.push(`%${filters.teacher}%`);
+    paramIndex += 1;
+  }
+
+  if (Array.isArray(filters.subject) && filters.subject.length > 0) {
+    const placeholders = filters.subject.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`${tableAlias}.codigo_asignatura ILIKE ANY(ARRAY[${placeholders}])`);
+    params.push(...filters.subject.map((s) => `%${s}%`));
+    paramIndex += filters.subject.length;
+  } else if (typeof filters.subject === 'string' && filters.subject.trim()) {
+    conditions.push(`${tableAlias}.codigo_asignatura ILIKE $${paramIndex}`);
+    params.push(`%${filters.subject}%`);
     paramIndex += 1;
   }
 
@@ -119,13 +181,15 @@ const buildLibraryDateFilters = (
 };
 
 const shouldApplyAcademicCohort = (filters: DashboardFilters): boolean =>
-  Boolean(filters.semesters?.length) ||
-  Boolean(filters.courseIds?.length) ||
-  Boolean(filters.teachers?.length) ||
-  Boolean(filters.subjects?.length) ||
+  (Array.isArray(filters.semester) && filters.semester.length > 0) ||
+  typeof filters.semester === 'number' ||
+  (Array.isArray(filters.courseId) && filters.courseId.length > 0) ||
+  typeof filters.courseId === 'number' ||
+  Boolean(filters.teacher) ||
+  Boolean(filters.subject) ||
   typeof filters.gradeMin === 'number' ||
   typeof filters.gradeMax === 'number' ||
-  Boolean(filters.activityLevels?.length);
+  Boolean(filters.activityLevel);
 
 export const getFilters = async (): Promise<Record<string, unknown>> => {
   const yearsQuery = `
@@ -200,7 +264,7 @@ export const getFilters = async (): Promise<Record<string, unknown>> => {
 
 export const getOverview = async (filters: DashboardFilters = {}): Promise<Record<string, unknown>> => {
   const academicFilters = buildAcademicFilters(filters);
-  const libraryDateFilters = buildLibraryDateFilters(filters, academicFilters.nextParamIndex);
+  const libraryDateFilters = buildLibraryFilters(filters, academicFilters.nextParamIndex);
   const libraryConditions = [...libraryDateFilters.conditions];
 
   if (shouldApplyAcademicCohort(filters)) {
@@ -241,7 +305,20 @@ export const getOverview = async (filters: DashboardFilters = {}): Promise<Recor
       ) AS porcentaje_asistencia
   `;
 
-  const result = await neonPool.query(query, [...academicFilters.params, ...libraryDateFilters.params]);
+  const sqlParams = [...academicFilters.params, ...libraryDateFilters.params];
+  console.log('==============================');
+  console.log('[SQL] getOverview FINAL SQL:', query);
+  console.log('[SQL] getOverview SQL PARAMS:', sqlParams);
+  console.log('==============================');
+  const result = await neonPool.query(query, sqlParams);
+  console.log('==============================');
+  console.log('[ROWS] getOverview ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getOverview FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getOverview FINAL DATA:', result.rows[0]);
+  console.log('[DEBUG] getOverview: AVG RECORDS PER STUDENT:', result.rows[0].total_registros_academicos / result.rows[0].total_estudiantes);
+  console.log('==============================');
   return result.rows[0];
 };
 
@@ -266,6 +343,17 @@ export const getAcademicPerformanceBySubject = async (
   `;
 
   const result = await neonPool.query(query, academicFilters.params);
+  console.log('==============================');
+  console.log('[SQL] getAcademicPerformanceBySubject FINAL SQL:', query);
+  console.log('[SQL] getAcademicPerformanceBySubject SQL PARAMS:', academicFilters.params);
+  console.log('[ROWS] getAcademicPerformanceBySubject ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getAcademicPerformanceBySubject FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getAcademicPerformanceBySubject FINAL DATA:', result.rows);
+  console.log('[DEBUG] getAcademicPerformanceBySubject: UNIQUE SUBJECTS:', new Set(result.rows.map(r => r.codigo_asignatura)).size);
+  console.log('[DEBUG] getAcademicPerformanceBySubject: TOTAL ROWS:', result.rows.length);
+  console.log('==============================');
   return result.rows;
 };
 
@@ -290,28 +378,27 @@ export const getAcademicGradeDistributionByStudent = async (
       FROM filtered_academic
       GROUP BY id_estudiante
     )
-    SELECT '0.0 - 0.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 0 AND avg_grade < 0.5)::int AS total_estudiantes FROM student_avg
+    SELECT '0.0 - 1.9' AS rango, COUNT(*) FILTER (WHERE avg_grade < 2)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '0.5 - 1.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 0.5 AND avg_grade < 1.0)::int AS total_estudiantes FROM student_avg
+    SELECT '2.0 - 2.9' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 2 AND avg_grade < 3)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '1.0 - 1.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 1.0 AND avg_grade < 1.5)::int AS total_estudiantes FROM student_avg
+    SELECT '3.0 - 3.9' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 3 AND avg_grade < 4)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '1.5 - 2.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 1.5 AND avg_grade < 2.0)::int AS total_estudiantes FROM student_avg
+    SELECT '4.0 - 4.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4 AND avg_grade < 4.6)::int AS total_estudiantes FROM student_avg
     UNION ALL
-    SELECT '2.0 - 2.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 2.0 AND avg_grade < 2.5)::int AS total_estudiantes FROM student_avg
-    UNION ALL
-    SELECT '2.5 - 3.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 2.5 AND avg_grade < 3.0)::int AS total_estudiantes FROM student_avg
-    UNION ALL
-    SELECT '3.0 - 3.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 3.0 AND avg_grade < 3.5)::int AS total_estudiantes FROM student_avg
-    UNION ALL
-    SELECT '3.5 - 4.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 3.5 AND avg_grade < 4.0)::int AS total_estudiantes FROM student_avg
-    UNION ALL
-    SELECT '4.0 - 4.5' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4.0 AND avg_grade < 4.5)::int AS total_estudiantes FROM student_avg
-    UNION ALL
-    SELECT '4.5 - 5.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4.5 AND avg_grade <= 5.0)::int AS total_estudiantes FROM student_avg
+    SELECT '4.6 - 5.0' AS rango, COUNT(*) FILTER (WHERE avg_grade >= 4.6 AND avg_grade <= 5)::int AS total_estudiantes FROM student_avg
   `;
 
   const result = await neonPool.query(query, academicFilters.params);
+  console.log('==============================');
+  console.log('[SQL] getAcademicGradeDistributionByStudent FINAL SQL:', query);
+  console.log('[SQL] getAcademicGradeDistributionByStudent SQL PARAMS:', academicFilters.params);
+  console.log('[ROWS] getAcademicGradeDistributionByStudent ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getAcademicGradeDistributionByStudent FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getAcademicGradeDistributionByStudent FINAL DATA:', result.rows);
+  console.log('==============================');
   return result.rows;
 };
 
@@ -339,6 +426,15 @@ export const getAcademicAttendanceTrend = async (
   `;
 
   const result = await neonPool.query(query, academicFilters.params);
+  console.log('==============================');
+  console.log('[SQL] getAcademicAttendanceTrend FINAL SQL:', query);
+  console.log('[SQL] getAcademicAttendanceTrend SQL PARAMS:', academicFilters.params);
+  console.log('[ROWS] getAcademicAttendanceTrend ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getAcademicAttendanceTrend FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getAcademicAttendanceTrend FINAL DATA:', result.rows);
+  console.log('==============================');
   return result.rows;
 };
 
@@ -364,6 +460,15 @@ export const getAcademicAttendanceByWeekday = async (
   `;
 
   const result = await neonPool.query(query, academicFilters.params);
+  console.log('==============================');
+  console.log('[SQL] getAcademicAttendanceByWeekday FINAL SQL:', query);
+  console.log('[SQL] getAcademicAttendanceByWeekday SQL PARAMS:', academicFilters.params);
+  console.log('[ROWS] getAcademicAttendanceByWeekday ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getAcademicAttendanceByWeekday FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getAcademicAttendanceByWeekday FINAL DATA:', result.rows);
+  console.log('==============================');
   return result.rows;
 };
 
@@ -389,6 +494,15 @@ export const getAcademicAttendanceByStudentSemester = async (
   `;
 
   const result = await neonPool.query(query, academicFilters.params);
+  console.log('==============================');
+  console.log('[SQL] getAcademicAttendanceByStudentSemester FINAL SQL:', query);
+  console.log('[SQL] getAcademicAttendanceByStudentSemester SQL PARAMS:', academicFilters.params);
+  console.log('[ROWS] getAcademicAttendanceByStudentSemester ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getAcademicAttendanceByStudentSemester FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getAcademicAttendanceByStudentSemester FINAL DATA:', result.rows);
+  console.log('==============================');
   return result.rows;
 };
 
@@ -414,6 +528,15 @@ export const getAcademicAttendanceBySubject = async (
   `;
 
   const result = await neonPool.query(query, academicFilters.params);
+  console.log('==============================');
+  console.log('[SQL] getAcademicAttendanceBySubject FINAL SQL:', query);
+  console.log('[SQL] getAcademicAttendanceBySubject SQL PARAMS:', academicFilters.params);
+  console.log('[ROWS] getAcademicAttendanceBySubject ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getAcademicAttendanceBySubject FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getAcademicAttendanceBySubject FINAL DATA:', result.rows);
+  console.log('==============================');
   return result.rows;
 };
 
@@ -422,7 +545,7 @@ export const getLibraryUsageByType = async (
 ): Promise<Record<string, unknown>[]> => {
   const cohortFiltersEnabled = shouldApplyAcademicCohort(filters);
   const academicFilters = cohortFiltersEnabled ? buildAcademicFilters(filters) : null;
-  const libraryDateFilters = buildLibraryDateFilters(
+  const libraryDateFilters = buildLibraryFilters(
     filters,
     cohortFiltersEnabled && academicFilters ? academicFilters.nextParamIndex : 1
   );
@@ -481,6 +604,15 @@ export const getLibraryUsageByType = async (
     ? [...(academicFilters?.params || []), ...libraryDateFilters.params]
     : libraryDateFilters.params;
   const result = await neonPool.query(query, params);
+  console.log('==============================');
+  console.log('[SQL] getLibraryUsageByType FINAL SQL:', query);
+  console.log('[SQL] getLibraryUsageByType SQL PARAMS:', params);
+  console.log('[ROWS] getLibraryUsageByType ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getLibraryUsageByType FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getLibraryUsageByType FINAL DATA:', result.rows);
+  console.log('==============================');
 
   return result.rows;
 };
@@ -490,7 +622,7 @@ export const getLibraryAvailability = async (
 ): Promise<Record<string, unknown>[]> => {
   const cohortFiltersEnabled = shouldApplyAcademicCohort(filters);
   const academicFilters = cohortFiltersEnabled ? buildAcademicFilters(filters) : null;
-  const libraryDateFilters = buildLibraryDateFilters(
+  const libraryDateFilters = buildLibraryFilters(
     filters,
     cohortFiltersEnabled && academicFilters ? academicFilters.nextParamIndex : 1
   );
@@ -520,9 +652,13 @@ export const getLibraryAvailability = async (
       )
       SELECT
         CASE
+          WHEN NULLIF(TRIM(tipo_interaccion), '') IS NULL
+            THEN 'SIN ESTADO'
           WHEN NULLIF(split_part(tipo_interaccion, ':', 2), '') IS NOT NULL
             THEN CONCAT(split_part(tipo_interaccion, ':', 1), ' - ', split_part(tipo_interaccion, ':', 2))
-          ELSE split_part(tipo_interaccion, ':', 1)
+          WHEN NULLIF(split_part(tipo_interaccion, ':', 1), '') IS NOT NULL
+            THEN split_part(tipo_interaccion, ':', 1)
+          ELSE 'SIN ESTADO'
         END AS estado,
         COUNT(*)::int AS total
       FROM filtered_library
@@ -532,9 +668,13 @@ export const getLibraryAvailability = async (
     : `
       SELECT
         CASE
+          WHEN NULLIF(TRIM(fb.tipo_interaccion), '') IS NULL
+            THEN 'SIN ESTADO'
           WHEN NULLIF(split_part(fb.tipo_interaccion, ':', 2), '') IS NOT NULL
             THEN CONCAT(split_part(fb.tipo_interaccion, ':', 1), ' - ', split_part(fb.tipo_interaccion, ':', 2))
-          ELSE split_part(fb.tipo_interaccion, ':', 1)
+          WHEN NULLIF(split_part(fb.tipo_interaccion, ':', 1), '') IS NOT NULL
+            THEN split_part(fb.tipo_interaccion, ':', 1)
+          ELSE 'SIN ESTADO'
         END AS estado,
         COUNT(*)::int AS total
       FROM fact_uso_biblioteca fb
@@ -546,7 +686,19 @@ export const getLibraryAvailability = async (
   const params = cohortFiltersEnabled
     ? [...(academicFilters?.params || []), ...libraryDateFilters.params]
     : libraryDateFilters.params;
+  console.log('==============================');
+  console.log('[SQL] getLibraryAvailability FINAL SQL:', query);
+  console.log('[SQL] getLibraryAvailability SQL PARAMS:', params);
+  console.log('==============================');
   const result = await neonPool.query(query, params);
+  console.log('==============================');
+  console.log('[ROWS] getLibraryAvailability ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getLibraryAvailability FIRST ROW SAMPLE:', result.rows[0]);
+    console.log('[DEBUG] getLibraryAvailability: Checking estado values:', result.rows.map(r => r.estado));
+  }
+  console.log('[KPI] getLibraryAvailability FINAL DATA:', result.rows);
+  console.log('==============================');
 
   return result.rows;
 };
@@ -555,7 +707,7 @@ export const getLibraryActivityByLevel = async (
   filters: DashboardFilters = {}
 ): Promise<Record<string, unknown>[]> => {
   const academicFilters = buildAcademicFilters(filters);
-  const libraryDateFilters = buildLibraryDateFilters(filters, academicFilters.nextParamIndex);
+  const libraryDateFilters = buildLibraryFilters(filters, academicFilters.nextParamIndex);
   const libraryConditions = [...libraryDateFilters.conditions, 'fb.id_estudiante IN (SELECT id_estudiante FROM filtered_students)'];
 
   const query = `
@@ -589,5 +741,14 @@ export const getLibraryActivityByLevel = async (
 
   const params = [...academicFilters.params, ...libraryDateFilters.params];
   const result = await neonPool.query(query, params);
+  console.log('==============================');
+  console.log('[SQL] getLibraryActivityByLevel FINAL SQL:', query);
+  console.log('[SQL] getLibraryActivityByLevel SQL PARAMS:', params);
+  console.log('[ROWS] getLibraryActivityByLevel ROWS RETURNED:', result.rows.length);
+  if (result.rows.length > 0) {
+    console.log('[ROWS] getLibraryActivityByLevel FIRST ROW SAMPLE:', result.rows[0]);
+  }
+  console.log('[KPI] getLibraryActivityByLevel FINAL DATA:', result.rows);
+  console.log('==============================');
   return result.rows;
 };
