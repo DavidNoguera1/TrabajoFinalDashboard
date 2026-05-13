@@ -1,0 +1,185 @@
+// Generado automaticamente para MongoDB
+db.accesos_laboratorio.deleteMany({});
+
+db.accesos_laboratorio.insertMany([
+  {
+    "numero_documento": "1085500001",
+    "semestre": 5,
+    "fecha": "15/08/2025",
+    "hora_entrada": "08:15",
+    "hora_salida": "10:30:00",
+    "equipo_utilizado": "PC-LAB1-05",
+    "descripcion_equipo": "Workstation MERN - MongoDB/React"
+  },
+  {
+    "numero_documento": "1085500002",
+    "semestre": 5,
+    "fecha": "2025-08-15",
+    "hora_entrada": "9:00 AM",
+    "hora_salida": "11:45",
+    "equipo_utilizado": "PC-LAB1-12",
+    "descripcion_equipo": "Workstation General - Ofimática"
+  },
+  {
+    "numero_documento": "1085500004",
+    "semestre": 5,
+    "fecha": "08-16-2025",
+    "hora_entrada": "14:00:00",
+    "hora_salida": "6:30 PM",
+    "equipo_utilizado": "PC-LAB2-01",
+    "descripcion_equipo": "Entorno Python - Estructuras de Datos"
+  },
+  {
+    "numero_documento": "1085500006",
+    "semestre": 5,
+    "fecha": "16/08/2025",
+    "hora_entrada": "14:10",
+    "hora_salida": "17:00",
+    "equipo_utilizado": "PC-LAB2-04",
+    "descripcion_equipo": "workstation mern - node.js/express"
+  },
+  {
+    "numero_documento": "1085500001",
+    "semestre": 5,
+    "fecha": "2025-08-20",
+    "hora_entrada": "08:00:00",
+    "hora_salida": "12:00 p.m.",
+    "equipo_utilizado": "PC-LAB1-05",
+    "descripcion_equipo": "Workstation MERN - MongoDB/React"
+  },
+  {
+    "numero_documento": "1085500009",
+    "semestre": 5,
+    "fecha": "20-08-2025",
+    "hora_entrada": "10:30 AM",
+    "hora_salida": "13:00",
+    "equipo_utilizado": "PC-LAB3-15",
+    "descripcion_equipo": "Maquina Virtual - Arquitectura de Redes"
+  },
+  {
+    "numero_documento": "1085500011",
+    "semestre": 5,
+    "fecha": "2025-08-22",
+    "hora_entrada": "16:00:00",
+    "hora_salida": null,
+    "equipo_utilizado": "PC-LAB1-08",
+    "descripcion_equipo": "Laboratorio Célula de Programación"
+  },
+  {
+    "numero_documento": "1085500013",
+    "semestre": 5,
+    "fecha": "08-22-2025",
+    "hora_entrada": "4:15 PM",
+    "hora_salida": "20:00:00",
+    "equipo_utilizado": "PC-LAB1-09",
+    "descripcion_equipo": "Workstation Linux - Backend TypeScript"
+  },
+  {
+    "numero_documento": "1085500004",
+    "semestre": 5,
+    "fecha": "23/08/2025",
+    "hora_entrada": "14:00:00",
+    "hora_salida": "17:00:00",
+    "equipo_utilizado": "PC-LAB2-01",
+    "descripcion_equipo": "ENTORNO PYTHON - ESTRUCTURAS DE DATOS"
+  },
+  {
+    "numero_documento": "1085500003",
+    "semestre": 5,
+    "fecha": "2025-08-25",
+    "hora_entrada": "09:00:00",
+    "hora_salida": "10:00 a.m.",
+    "equipo_utilizado": "PC-LAB2-10",
+    "descripcion_equipo": "Workstation General - Navegación Web"
+  },
+  {
+    "numero_documento": "1085500005",
+    "semestre": 5,
+    "fecha": "25/08/2025",
+    "hora_entrada": "11:00 AM",
+    "hora_salida": "13:30",
+    "equipo_utilizado": "PC-LAB2-11",
+    "descripcion_equipo": "Servidor GPU - Modelos Machine Learning"
+  },
+  {
+    "numero_documento": "1085500015",
+    "semestre": 5,
+    "fecha": "2025-08-26",
+    "hora_entrada": "08:30:00",
+    "hora_salida": "11:00",
+    "equipo_utilizado": "PC-LAB3-02",
+    "descripcion_equipo": "Sala Audiovisual - Video Beam"
+  },
+  {
+    "numero_documento": "1085500008",
+    "semestre": 5,
+    "fecha": "26/08/2025",
+    "hora_entrada": "14:00",
+    "hora_salida": "3:30 PM",
+    "equipo_utilizado": "PC-LAB1-20",
+    "descripcion_equipo": "Workstation General - Ofimática"
+  },
+  {
+    "numero_documento": "1085500013",
+    "semestre": 5,
+    "fecha": "08-27-2025",
+    "hora_entrada": "15:00:00",
+    "hora_salida": "19:00:00",
+    "equipo_utilizado": "PC-LAB1-09",
+    "descripcion_equipo": "Workstation Linux - Backend TypeScript"
+  },
+  {
+    "numero_documento": "1085500010",
+    "semestre": 5,
+    "fecha": "2025-08-27",
+    "hora_entrada": "9:30 AM",
+    "hora_salida": "11:30:00",
+    "equipo_utilizado": "PC-LAB2-05",
+    "descripcion_equipo": "Workstation General - Ofimática"
+  },
+  {
+    "numero_documento": "1085500012",
+    "semestre": 5,
+    "fecha": "28/08/2025",
+    "hora_entrada": "15:00",
+    "hora_salida": "16:00",
+    "equipo_utilizado": "PC-LAB3-09",
+    "descripcion_equipo": "Sala Audiovisual - Video Beam"
+  },
+  {
+    "numero_documento": "1085500001",
+    "semestre": 5,
+    "fecha": "2025-08-29",
+    "hora_entrada": "08:00:00",
+    "hora_salida": "11:00 a.m.",
+    "equipo_utilizado": "PC-LAB1-05",
+    "descripcion_equipo": "Workstation MERN - MongoDB/React"
+  },
+  {
+    "numero_documento": "1085500002",
+    "semestre": 5,
+    "fecha": "29/08/2025",
+    "hora_entrada": "09:15",
+    "hora_salida": "12:00:00",
+    "equipo_utilizado": "PC-LAB1-12",
+    "descripcion_equipo": "Workstation General - Ofimática"
+  },
+  {
+    "numero_documento": "1085500004",
+    "semestre": 5,
+    "fecha": "08-30-2025",
+    "hora_entrada": "2:00 PM",
+    "hora_salida": "18:00",
+    "equipo_utilizado": "PC-LAB2-01",
+    "descripcion_equipo": "Entorno Python - Estructuras de Datos"
+  },
+  {
+    "numero_documento": "1085500011",
+    "semestre": 5,
+    "fecha": "30/08/2025",
+    "hora_entrada": "14:30:00",
+    "hora_salida": "5:45 PM",
+    "equipo_utilizado": "PC-LAB1-08",
+    "descripcion_equipo": "Laboratorio Célula de Programación"
+  }
+]);
