@@ -25,9 +25,9 @@ function LibraryResourcesChart({ data }: Props) {
   })).sort((a, b) => b.value - a.value).slice(0, 8);
 
   return (
-    <div className="rounded-2xl bg-surface p-6 shadow-sm border border-slate-800">
+    <div className="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
       <div className="flex items-center gap-2 mb-6">
-        <BookOpen className="w-5 h-5 text-secondary" />
+        <BookOpen className="w-5 h-5 text-primary" />
         <h2 className="text-xl font-bold text-text-main">
           Recursos de Biblioteca (Top 8)
         </h2>
@@ -52,10 +52,10 @@ function LibraryResourcesChart({ data }: Props) {
             </Pie>
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: '#1e293b', 
-                borderColor: '#334155',
+                backgroundColor: '#ffffff', 
+                borderColor: '#e2e8f0',
                 borderRadius: '8px',
-                color: '#f8fafc'
+                color: '#1e293b'
               }}
               formatter={(value) => `${value} artículos`}
             />
@@ -65,7 +65,7 @@ function LibraryResourcesChart({ data }: Props) {
 
       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
         {chartData.map((item, idx) => (
-          <div key={idx} className="flex items-center gap-2 p-2 bg-slate-800/30 rounded">
+          <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
             <div 
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: COLORS[idx % COLORS.length] }}

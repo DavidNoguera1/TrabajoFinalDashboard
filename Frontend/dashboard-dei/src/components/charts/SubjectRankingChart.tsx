@@ -1,116 +1,128 @@
+import { ArrowUp, Award } from "lucide-react";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
-import { ArrowUp, Award } from 'lucide-react';
+import type { PerformanceBySubject } from "../../types/dashboard";
 
 interface Props {
-  data: any[];
+  data: PerformanceBySubject[];
 }
 
+const truncateName = (value: string, max = 24): string =>
+  value.length > max ? `${value.slice(0, max - 1)}…` : value;
+
 function SubjectRankingChart({ data }: Props) {
-  // Top 5 mejores y top 5 peores
-  const sorted = [...data].sort((a, b) => 
-    Number(b.promedio_nota_final) - Number(a.promedio_nota_final)
-  );
-  
-  const topPerformers = sorted.slice(0, 5).map((item, idx) => ({
+  const sorted = [...data]
+    .map((item) => ({
+      ...item,
+      promedio_nota_final: Number(item.promedio_nota_final),
+    }))
+    .filter((item) => Number.isFinite(item.promedio_nota_final))
+    .sort((a, b) => b.promedio_nota_final - a.promedio_nota_final);
+
+  const topPerformers = sorted.slice(0, 5).map((item) => ({
     ...item,
-    promedio_nota_final: Number(item.promedio_nota_final),
-    nombre: item.nombre_asignatura.substring(0, 15),
-    rank: idx + 1,
-    type: 'Mejor'
+    shortName: truncateName(item.nombre_asignatura),
   }));
 
-  const worstPerformers = sorted.slice(-5).reverse().map((item, idx) => ({
-    ...item,
-    promedio_nota_final: Number(item.promedio_nota_final),
-    nombre: item.nombre_asignatura.substring(0, 15),
-    rank: idx + 1,
-    type: 'Menor'
-  }));
+  const lowPerformers = sorted
+    .slice(-5)
+    .reverse()
+    .map((item) => ({
+      ...item,
+      shortName: truncateName(item.nombre_asignatura),
+    }));
 
-  const chartData = [...topPerformers, ...worstPerformers];
+  const chartData = [...topPerformers, ...lowPerformers];
 
   return (
-    <div className="rounded-2xl bg-surface p-6 shadow-sm border border-slate-800">
-      <div className="flex items-center gap-2 mb-6">
-        <Award className="w-5 h-5 text-secondary" />
-        <h2 className="text-xl font-bold text-text-main">
-          Ranking de Asignaturas
-        </h2>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 flex items-center gap-2">
+        <Award className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-bold text-text-main">Ranking de Asignaturas</h2>
       </div>
 
-      <div className="h-75">
+      <div className="h-[360px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart 
+          <BarChart
             data={chartData}
-            margin={{ top: 10, right: 30, left: 150, bottom: 20 }}
+            margin={{ top: 8, right: 24, left: 16, bottom: 12 }}
             layout="vertical"
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
-            <XAxis 
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+            <XAxis
               type="number"
               domain={[0, 5]}
-              stroke="#94a3b8"
-              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              stroke="#64748b"
+              tick={{ fill: "#64748b", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
             />
-            <YAxis 
+            <YAxis
               type="category"
-              dataKey="nombre"
-              stroke="#94a3b8"
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
+              dataKey="shortName"
+              stroke="#64748b"
+              tick={{ fill: "#64748b", fontSize: 11 }}
               tickLine={false}
               axisLine={false}
-              width={140}
+              width={180}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1e293b', 
-                borderColor: '#334155',
-                borderRadius: '8px',
-                color: '#f8fafc'
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#ffffff",
+                borderColor: "#e2e8f0",
+                borderRadius: "8px",
+                color: "#1e293b",
               }}
-              cursor={{ fill: '#334155', opacity: 0.4 }}
+              cursor={{ fill: "#e2e8f0", opacity: 0.4 }}
               formatter={(value) =>
-                typeof value === 'number' ? value.toFixed(2) : String(value)
+                typeof value === "number" ? value.toFixed(2) : String(value)
               }
             />
-            <Bar 
+            <Bar
               dataKey="promedio_nota_final"
-              fill="#8b5cf6"
+              fill="#3b82f6"
               radius={[0, 4, 4, 0]}
-              label={{
-                position: 'right',
-                fill: '#f8fafc',
-                fontSize: 11
-              }}
-            />
+              label={{ position: "right", fill: "#1e293b", fontSize: 11 }}
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`${entry.codigo_asignatura}-${index}`}
+                  fill={index < topPerformers.length ? "#22c55e" : "#ef4444"}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4">
-        <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg">
-          <ArrowUp className="w-5 h-5 text-green-400" />
-          <div>
-            <p className="text-xs text-text-muted">Mejor Desempeño</p>
-            <p className="text-lg font-bold text-green-400">
-              {topPerformers[0]?.nombre}
+        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3">
+          <ArrowUp className="h-5 w-5 text-green-600" />
+          <div className="min-w-0">
+            <p className="text-xs text-text-muted">Mejor desempeño</p>
+            <p
+              className="truncate text-xl font-bold text-green-600"
+              title={topPerformers[0]?.nombre_asignatura || "Sin datos"}
+            >
+              {topPerformers[0]?.nombre_asignatura || "Sin datos"}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg">
-          <span className="text-xs text-text-muted">Menor Desempeño</span>
-          <p className="text-lg font-bold text-red-400">
-            {worstPerformers[0]?.nombre}
+        <div className="min-w-0 rounded-lg bg-slate-50 p-3">
+          <p className="text-xs text-text-muted">Menor desempeño</p>
+          <p
+            className="truncate text-xl font-bold text-red-600"
+            title={lowPerformers[0]?.nombre_asignatura || "Sin datos"}
+          >
+            {lowPerformers[0]?.nombre_asignatura || "Sin datos"}
           </p>
         </div>
       </div>

@@ -64,6 +64,19 @@ const buildFactAcademico = (
   return result;
 };
 
+const resolveSnapshotDate = (factRows: FactAcademicoRow[]): string => {
+  const academicDates = factRows
+    .map((row) => row.id_fecha)
+    .filter((value): value is string => Boolean(value))
+    .sort();
+
+  if (academicDates.length > 0) {
+    return academicDates[academicDates.length - 1];
+  }
+
+  return toIsoDate(new Date());
+};
+
 const pushBibliotecaRow = (
   rows: FactBibliotecaRow[],
   payload: {
@@ -283,7 +296,7 @@ export const runDescargaInicial = async (): Promise<{
     groupAsistenciasByMatricula(academicData.asistencias)
   );
 
-  const snapshotDate = toIsoDate(new Date());
+  const snapshotDate = resolveSnapshotDate(factAcademico);
   const factBibliotecaPayload = buildFactBiblioteca(libraryData, snapshotDate);
   const laboratorioPayload = buildLaboratoryFacts(laboratoryData);
   const nivelActividadByStudent = buildNivelActividadByStudent(libraryData);

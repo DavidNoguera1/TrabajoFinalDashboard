@@ -1,76 +1,107 @@
+import { Library } from "lucide-react";
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
 } from "recharts";
-import { Library } from 'lucide-react';
+import type { LibraryUsageItem } from "../../types/dashboard";
 
 interface Props {
-  data: any[];
+  data: LibraryUsageItem[];
 }
 
+const palette = [
+  "#2563eb",
+  "#0ea5e9",
+  "#14b8a6",
+  "#22c55e",
+  "#84cc16",
+  "#f59e0b",
+  "#f97316",
+  "#ef4444",
+  "#ec4899",
+  "#8b5cf6",
+  "#6366f1",
+];
+
+const prettify = (value: string): string =>
+  value
+    .replace(/[_:]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 function ResourceBarChart({ data }: Props) {
-  const formattedData = data.map((item) => ({
-    tipo: item.tipo_recurso.replace(/[_:]/g, ' ').substring(0, 20),
-    articulos: Number(item.total_articulos),
-  })).sort((a, b) => b.articulos - a.articulos).slice(0, 8);
+  const ranked = data
+    .map((item) => ({
+      tipo: prettify(item.tipo_recurso),
+      articulos: Number(item.total_articulos || 0),
+    }))
+    .sort((a, b) => b.articulos - a.articulos);
+
+  const topItems = ranked.slice(0, 10);
+  const othersTotal = ranked.slice(10).reduce((sum, item) => sum + item.articulos, 0);
+
+  const chartData = othersTotal > 0 ? [...topItems, { tipo: "Otros", articulos: othersTotal }] : topItems;
 
   return (
-    <div className="rounded-2xl bg-surface p-6 shadow-sm border border-slate-800">
-      <div className="flex items-center gap-2 mb-6">
-        <Library className="w-5 h-5 text-secondary" />
-        <h2 className="text-xl font-bold text-text-main">
-          Library Resource Usage (Top 8)
-        </h2>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Library className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-bold text-text-main">Uso de Recursos (Top 10 + Otros)</h2>
+        </div>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          Categorías: {chartData.length}
+        </span>
       </div>
 
-      <div className="h-75">
+      <div className="h-[360px]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={formattedData} margin={{ top: 10, right: 30, left: 0, bottom: 60 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-
-            <XAxis 
+          <BarChart
+            data={chartData}
+            layout="vertical"
+            margin={{ top: 8, right: 32, left: 16, bottom: 8 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+            <XAxis
+              type="number"
+              stroke="#64748b"
+              tick={{ fill: "#64748b", fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              type="category"
               dataKey="tipo"
-              stroke="#94a3b8"
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              angle={-45}
-              textAnchor="end"
-              height={80}
-            />
-
-            <YAxis 
-              stroke="#94a3b8"
-              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              width={170}
+              stroke="#64748b"
+              tick={{ fill: "#64748b", fontSize: 11 }}
               tickLine={false}
               axisLine={false}
             />
-
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1e293b', 
-                borderColor: '#334155',
-                borderRadius: '8px',
-                color: '#f8fafc'
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#ffffff",
+                borderColor: "#e2e8f0",
+                borderRadius: "8px",
+                color: "#1e293b",
               }}
-              cursor={{ fill: '#334155', opacity: 0.4 }}
+              formatter={(value) => [`${value} artículos`, "Total"]}
             />
-
-            <Bar 
+            <Bar
               dataKey="articulos"
-              fill="#06b6d4"
-              radius={[4, 4, 0, 0]}
-              label={{
-                position: 'top',
-                fill: '#f8fafc',
-                fontSize: 11
-              }}
-            />
+              radius={[0, 4, 4, 0]}
+              label={{ position: "right", fill: "#1e293b", fontSize: 11 }}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`${entry.tipo}-${index}`} fill={palette[index % palette.length]} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

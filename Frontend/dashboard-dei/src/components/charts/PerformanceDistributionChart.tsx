@@ -1,78 +1,73 @@
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
+import type { GradeDistributionItem } from "../../types/dashboard";
 
 interface Props {
-  data: any[];
+  data: GradeDistributionItem[];
 }
 
 function PerformanceDistributionChart({ data }: Props) {
-  // Crear rangos de notas (0-1, 1-2, 2-3, 3-4, 4-5)
-  const ranges = [
-    { range: '0.0 - 1.9', count: 0, color: '#ef4444' },
-    { range: '2.0 - 2.9', count: 0, color: '#f97316' },
-    { range: '3.0 - 3.9', count: 0, color: '#eab308' },
-    { range: '4.0 - 4.5', count: 0, color: '#84cc16' },
-    { range: '4.6 - 5.0', count: 0, color: '#22c55e' },
-  ];
-
-  data.forEach(item => {
-    const nota = Number(item.promedio_nota_final);
-    if (nota < 2) ranges[0].count++;
-    else if (nota < 3) ranges[1].count++;
-    else if (nota < 4) ranges[2].count++;
-    else if (nota < 4.6) ranges[3].count++;
-    else ranges[4].count++;
-  });
+  const palette = ["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e"];
+  const ranges = data.map((item) => ({
+    range: item.rango,
+    count: Number(item.total_estudiantes || 0),
+  }));
+  const totalStudents = ranges.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="rounded-2xl bg-surface p-6 shadow-sm border border-slate-800">
-      <h2 className="mb-6 text-xl font-bold text-text-main">
-        Distribución de Notas
-      </h2>
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold text-text-main">Distribución de Notas (Estudiantes)</h2>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          Total: {totalStudents}
+        </span>
+      </div>
 
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={ranges} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-            <XAxis 
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis
               dataKey="range"
-              stroke="#94a3b8"
-              tick={{ fill: '#94a3b8', fontSize: 12 }}
+              stroke="#64748b"
+              tick={{ fill: "#64748b", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
             />
-            <YAxis 
-              stroke="#94a3b8"
-              tick={{ fill: '#94a3b8', fontSize: 12 }}
+            <YAxis
+              stroke="#64748b"
+              tick={{ fill: "#64748b", fontSize: 12 }}
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#1e293b', 
-                borderColor: '#334155',
-                borderRadius: '8px',
-                color: '#f8fafc'
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#ffffff",
+                borderColor: "#e2e8f0",
+                borderRadius: "8px",
+                color: "#1e293b",
               }}
-              cursor={{ fill: '#334155', opacity: 0.4 }}
+              formatter={(value) => [`${value} estudiantes`, "Cantidad"]}
+              cursor={{ fill: "#e2e8f0", opacity: 0.4 }}
             />
-            <Bar 
+            <Bar
               dataKey="count"
               fill="#3b82f6"
               radius={[4, 4, 0, 0]}
-              label={{
-                position: 'top',
-                fill: '#f8fafc',
-                fontSize: 12
-              }}
-            />
+              label={{ position: "top", fill: "#1e293b", fontSize: 12 }}
+            >
+              {ranges.map((entry, index) => (
+                <Cell key={`${entry.range}-${index}`} fill={palette[index % palette.length]} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
